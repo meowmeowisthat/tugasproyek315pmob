@@ -1,0 +1,42 @@
+<resources>
+    <!-- Buttons -->
+    <string name="btn_add_meal">Tambah Makanan</string>
+    <string name="btn_save_meal">Simpan</string>
+    <string name="btn_logout">Logout</string>
+
+    <!-- Titles -->
+    <string name="title_add_meal">Tambah Makanan</string>
+
+    <!-- Hints -->
+    <string name="hint_type">Jenis Makanan</string>
+    <string name="hint_name">Nama Makanan</string>
+    <string name="hint_portion">Porsi</string>
+    <string name="hint_portion_unit">porsi/Gram</string>
+    <string name="hint_date">Tanggal</string>
+    <string name="hint_time">Waktu</string>
+
+    <!-- Profile / Drawer -->
+    <string name="open_drawer">Buka Menu</string>
+    <string name="close_drawer">Tutup Menu</string>
+
+    <!-- Edit / Delete -->
+    <string name="edit">Edit</string>
+    <string name="delete">Hapus</string>
+
+    <!-- Toast messages -->
+    <string name="msg_fill_all_fields">Semua field wajib diisi</string>
+    <string name="msg_portion_number">Porsi harus berupa angka</string>
+    <string name="msg_saved">Data berhasil disimpan</string>
+    <string name="msg_failed_save">Gagal menyimpan data</string>
+    <string name="msg_deleted">Data dihapus</string>
+    <string name="msg_failed_delete">Gagal menghapus data</string>
+
+    <!-- Dynamic placeholders -->
+    <string name="meal_portion">%1$d porsi</string>
+    <string name="cd_profile_image">Foto Profil</string>
+    <string name="cd_add_icon">Tambahkan Foto</string>
+    <string name="default_username">Nama Pengguna</string>
+    <string name="nav_profile">Profil</string>
+    <string name="nav_meal">Pola Makan</string>
+    <string name="nav_logout">Logout</string>
+</resources>

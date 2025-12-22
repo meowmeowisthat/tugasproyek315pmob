@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_dashboard"
+        android:title="Dashboard"/>
+    <item
+        android:id="@+id/nav_profile"
+        android:title="@string/nav_profile"/>
+    <item
+        android:id="@+id/nav_meal"
+        android:title="@string/nav_meal"/>
+    <item
+        android:id="@+id/nav_logout"
+        android:title="@string/nav_logout"/>
+</menu>
