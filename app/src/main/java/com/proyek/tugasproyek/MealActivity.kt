@@ -8,6 +8,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
@@ -15,6 +19,7 @@ import androidx.core.content.ContextCompat
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -23,7 +28,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MealActivity : AppCompatActivity() {
-
+    private val IS_TEST_MODE = true
     private lateinit var binding: ActivityMealBinding
     private lateinit var db: FirebaseDatabase
     private lateinit var auth: FirebaseAuth
@@ -38,6 +43,24 @@ class MealActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMealBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.btnReminder.setOnClickListener {
+
+            if (IS_TEST_MODE) {
+                val cal = Calendar.getInstance()
+                setMealReminder(
+                    cal.get(Calendar.HOUR_OF_DAY),
+                    cal.get(Calendar.MINUTE) + 1,
+                    999
+                )
+                Toast.makeText(this, "Test reminder 1 menit", Toast.LENGTH_SHORT).show()
+            } else {
+                setMealReminder(7, 0, 101)
+                setMealReminder(12, 0, 102)
+                setMealReminder(18, 0, 103)
+                Toast.makeText(this, "Pengingat makan aktif", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         requestNotificationPermission()
 
@@ -66,12 +89,8 @@ class MealActivity : AppCompatActivity() {
         // Tombol simpan
         binding.btnSaveMeal.setOnClickListener { saveMeal() }
 
-        binding.btnReminder.setOnClickListener {
-            setMealReminder(7,0)
-            setMealReminder(12,0)
-            setMealReminder(18,0)
-            Toast.makeText(this, "Pengingat makan aktif", Toast.LENGTH_SHORT).show()
-        }
+
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
@@ -92,41 +111,38 @@ class MealActivity : AppCompatActivity() {
         loadMeals()
     }
 
-    private fun setMealReminder(hour: Int, minute: Int) {
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        // ANDROID 12+
+    private fun setMealReminder(hour: Int, minute: Int, requestCode: Int) {
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        // Android 12+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                Toast.makeText(
-                    this,
-                    "Izinkan exact alarm di pengaturan",
-                    Toast.LENGTH_LONG
-                ).show()
-
-                val intent = Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                startActivity(intent)
+                startActivity(
+                    Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                )
                 return
             }
         }
-
-        val intent = Intent(this, MealReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            hour,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
-
             if (before(Calendar.getInstance())) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
         }
+
+        val intent = Intent(this, MealReminderReceiver::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
@@ -134,6 +150,7 @@ class MealActivity : AppCompatActivity() {
             pendingIntent
         )
     }
+
 
 
     private fun requestNotificationPermission() {
@@ -154,6 +171,7 @@ class MealActivity : AppCompatActivity() {
 
 
     private fun saveMeal() {
+        val calorieText = binding.etCalorie.text.toString().trim()
         val type = binding.etType.text.toString().trim()
         val name = binding.etName.text.toString().trim()
         val portionText = binding.etPortion.text.toString().trim()
@@ -171,7 +189,17 @@ class MealActivity : AppCompatActivity() {
             return
         }
 
-        val caloriePerPortion = 100 // default
+        if (calorieText.isEmpty()) {
+            Toast.makeText(this, "Kalori wajib diisi", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val caloriePerPortion = calorieText.toIntOrNull()
+        if (caloriePerPortion == null) {
+            Toast.makeText(this, "Kalori harus berupa angka", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val totalCalorie = portion * caloriePerPortion
 
         val uid = auth.currentUser?.uid
@@ -233,8 +261,7 @@ class MealActivity : AppCompatActivity() {
                             val time = typeSnap.child("time").getValue(String::class.java) ?: ""
                             val calorie = typeSnap.child("calorie").getValue(Int::class.java) ?: 0
 
-                            val meal = Meal(date, type, food, portion, time, calorie)
-                            meals.add(meal)
+                            meals.add(Meal(date, "", food, portion, time, calorie))
 
                             if (date == today) {
                                 totalCalorieToday += calorie
@@ -263,6 +290,8 @@ class MealActivity : AppCompatActivity() {
         binding.etPortion.setText(meal.portion.toString())
         binding.etDate.setText(meal.date)
         binding.etTime.setText(meal.time)
+
+        binding.etCalorie.setText((meal.calorie / meal.portion).toString())
 
         editingMealKey = Pair(meal.date, meal.type)
     }
@@ -318,6 +347,7 @@ class MealActivity : AppCompatActivity() {
         binding.etType.text?.clear()
         binding.etName.text?.clear()
         binding.etPortion.text?.clear()
+        binding.etCalorie.text?.clear()
         binding.etDate.setText(dateFormat.format(Calendar.getInstance().time))
         binding.etTime.setText(timeFormat.format(Calendar.getInstance().time))
         editingMealKey = null

@@ -136,6 +136,7 @@ class MainActivity : AppCompatActivity() {
         editIcon.setOnClickListener { editName() }
     }
 
+
     private fun setupChart(
         chart: LineChart,
         entries: List<Entry>,
