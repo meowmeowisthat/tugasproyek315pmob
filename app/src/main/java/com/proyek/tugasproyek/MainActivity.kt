@@ -430,8 +430,8 @@ class MainActivity : AppCompatActivity() {
 
                     if (snapshot.exists()) {
                         for (meal in snapshot.children) {
-                            val name =
-                                meal.child("name").getValue(String::class.java) ?: "Tidak diketahui"
+                            val food =
+                                meal.child("food").getValue(String::class.java) ?: ""
                             val calorie =
                                 meal.child("calorie").getValue(Int::class.java) ?: 0
                             val time =
@@ -443,7 +443,7 @@ class MainActivity : AppCompatActivity() {
                             document.add(
                                 Paragraph(
                                     "• Waktu   : $time\n" +
-                                            "  Makanan : $name\n" +
+                                            "  Makanan : $food\n" +
                                             "  Kalori  : $calorie kkal\n"
                                 )
                             )
