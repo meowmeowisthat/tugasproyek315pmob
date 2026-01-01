@@ -1,5 +1,20 @@
 package com.proyek.tugasproyek
 
+
+import com.itextpdf.kernel.pdf.PdfDocument
+import com.itextpdf.kernel.pdf.PdfWriter
+import com.itextpdf.layout.Document
+import com.itextpdf.layout.element.Paragraph
+import com.itextpdf.layout.properties.TextAlignment
+
+
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import java.io.ByteArrayOutputStream
+import com.itextpdf.io.image.ImageDataFactory
+import com.itextpdf.layout.element.Image
+
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -31,6 +46,9 @@ import de.hdodenhof.circleimageview.CircleImageView
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,6 +82,11 @@ class MainActivity : AppCompatActivity() {
             finish()
             return
         }
+
+        binding.btnDownloadReport.setOnClickListener {
+            generatePdfReport()
+        }
+
 
         setupToolbarAndDrawer()
         setupHeader()
@@ -366,4 +389,141 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
     }
+
+    private fun generatePdfReport() {
+        val uid = auth.currentUser?.uid ?: return
+
+        val sdfFile = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = sdfDate.format(Date())
+
+        val file = File(
+            getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS),
+            "Laporan_Pola_Makan_${sdfFile.format(Date())}.pdf"
+        )
+
+        db.reference.child("users").child(uid)
+            .child("meals").child(today)
+            .get()
+            .addOnSuccessListener { snapshot ->
+
+                try {
+                    val writer = PdfWriter(file)
+                    val pdf = PdfDocument(writer)
+                    val document = Document(pdf)
+
+                    // ===== JUDUL =====
+                    document.add(
+                        Paragraph("LAPORAN POLA MAKAN")
+                            .setBold()
+                            .setFontSize(18f)
+                            .setTextAlignment(TextAlignment.CENTER)
+                    )
+
+                    document.add(Paragraph("Tanggal: ${sdfFile.format(Date())}\n"))
+
+                    // ===== DETAIL MAKAN =====
+                    document.add(Paragraph("DETAIL MAKAN HARI INI").setBold())
+
+                    var totalCalories = 0
+                    var mealCount = 0
+
+                    if (snapshot.exists()) {
+                        for (meal in snapshot.children) {
+                            val name =
+                                meal.child("name").getValue(String::class.java) ?: "Tidak diketahui"
+                            val calorie =
+                                meal.child("calorie").getValue(Int::class.java) ?: 0
+                            val time =
+                                meal.child("time").getValue(String::class.java) ?: "-"
+
+                            totalCalories += calorie
+                            mealCount++
+
+                            document.add(
+                                Paragraph(
+                                    "• Waktu   : $time\n" +
+                                            "  Makanan : $name\n" +
+                                            "  Kalori  : $calorie kkal\n"
+                                )
+                            )
+                        }
+                    } else {
+                        document.add(Paragraph("Belum ada data makanan hari ini\n"))
+                    }
+
+                    // ===== GRAPH =====
+                    document.add(Paragraph("\nGRAFIK KALORI MINGGUAN").setBold())
+
+                    val bitmap = chartToBitmap(binding.mealChart)
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+
+                    val image = Image(ImageDataFactory.create(stream.toByteArray()))
+                    image.setAutoScale(true)
+
+                    document.add(image)
+
+                    // ===== RINGKASAN =====
+                    document.add(Paragraph("\nRINGKASAN").setBold())
+                    document.add(Paragraph("Jumlah makan : $mealCount kali"))
+                    document.add(Paragraph("Total kalori : $totalCalories kkal"))
+
+                    val status = when {
+                        mealCount == 0 -> "Belum makan"
+                        mealCount < 3 -> "Belum konsisten"
+                        else -> "Konsisten"
+                    }
+
+                    document.add(Paragraph("Status pola makan : $status"))
+
+                    // ===== TUTUP =====
+                    document.close()
+
+                    Toast.makeText(this, "PDF + Grafik berhasil dibuat", Toast.LENGTH_SHORT).show()
+                    openPdf(file)
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Gagal membuat PDF", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    private fun openPdf(file: File) {
+        val uri = FileProvider.getUriForFile(
+            this,
+            "$packageName.provider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+        }
+
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(
+                this,
+                "Tidak ada aplikasi pembuka PDF",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    private fun chartToBitmap(chart: LineChart): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            chart.width,
+            chart.height,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        chart.draw(canvas)
+        return bitmap
+    }
+
+
+
 }

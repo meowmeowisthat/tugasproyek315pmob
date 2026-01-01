@@ -122,6 +122,14 @@
             android:layout_height="wrap_content"
             android:text="@string/btn_logout"/>
 
+        <Button
+            android:id="@+id/btnDownloadReport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📄 Unduh Laporan Mingguan (PDF)"
+            android:layout_margin="16dp"
+            />
+
     </LinearLayout>
 
     <!-- ================= SIDEBAR ================= -->

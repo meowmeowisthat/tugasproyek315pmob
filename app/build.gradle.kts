@@ -63,6 +63,10 @@ dependencies {
 
     implementation("com.cloudinary:cloudinary-android:1.30.0") {
         exclude(group = "com.linkedin.android.litr", module = "litr")
+
+        implementation("com.itextpdf:kernel:7.2.5")
+        implementation("com.itextpdf:layout:7.2.5")
+
     }
 
     // Circle Image
@@ -74,4 +78,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+
+
+
 }
