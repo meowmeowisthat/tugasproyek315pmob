@@ -1,213 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@android:color/white">
+    android:background="@color/bg_screen">
 
-    <!-- Toolbar Back -->
-    <LinearLayout
+    <View
+        android:id="@+id/headerBg"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="12dp">
+        android:layout_height="180dp"
+        android:background="@drawable/bg_header_curve"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        <ImageView
-            android:id="@+id/ivBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/arrow_back"
-            android:contentDescription="Back"
-            android:clickable="true"
-            android:focusable="true" />
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/ic_menu"
+        app:tint="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Makanan Saya"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginStart="16dp"/>
-    </LinearLayout>
-
-    <!-- Tombol Tambah Makanan -->
-    <Button
-        android:id="@+id/btnAddMeal"
+    <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="+ Tambah Makanan"
-        android:layout_gravity="end"
-        android:layout_marginBottom="12dp"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"/>
+        android:text="Pola Makan"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnBack" />
 
-    <!-- Form Tambah Makanan -->
-    <LinearLayout
-        android:id="@+id/mealBox"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/bg_login_box"
-        android:elevation="8dp"
-        android:visibility="gone"
-        android:layout_marginBottom="16dp"
-        android:clipToPadding="false">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tambah Makanan"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:layout_gravity="center"
-            android:paddingBottom="12dp"/>
-
-        <EditText
-            android:id="@+id/etType"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Jenis Makanan"
-            android:padding="12dp"
-            android:background="@drawable/bg_edittext"
-            android:inputType="text"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Nama Makanan"
-            android:padding="12dp"
-            android:background="@drawable/bg_edittext"
-            android:inputType="text"
-            android:layout_marginBottom="8dp"/>
-
+        android:layout_marginHorizontal="24dp"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:layout_constraintTop_toBottomOf="@+id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@+id/headerBg"
+        android:layout_marginTop="32dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:paddingVertical="20dp"
+            android:baselineAligned="false">
 
-            <EditText
-                android:id="@+id/etPortion"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Porsi"
-                android:padding="12dp"
-                android:background="@drawable/bg_edittext"
-                android:inputType="number"
-                android:layout_marginEnd="8dp"/>
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvTotalMeals"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4"
+                    android:textColor="@color/text_green"
+                    android:textSize="22sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Makan"
+                    android:textColor="@color/gray_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="porsi"
-                android:layout_gravity="center_vertical"/>
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvTotalKcal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1470"
+                    android:textColor="#E65100"
+                    android:textSize="22sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Kalori"
+                    android:textColor="@color/gray_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvReminders"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:textColor="#1565C0"
+                    android:textSize="22sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reminders"
+                    android:textColor="@color/gray_text"
+                    android:textSize="12sp"/>
+            </LinearLayout>
         </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-        <EditText
-            android:id="@+id/etDate"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Tanggal"
-            android:padding="12dp"
-            android:background="@drawable/bg_edittext"
-            android:focusable="false"
-            android:clickable="true"
-            android:drawableEnd="@drawable/calender_svg"
-            android:drawablePadding="8dp"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etTime"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Waktu"
-            android:padding="12dp"
-            android:background="@drawable/bg_edittext"
-            android:focusable="false"
-            android:clickable="true"
-            android:drawableEnd="@drawable/time"
-            android:drawablePadding="8dp"
-            android:layout_marginBottom="12dp"/>
-
-
-        <EditText
-            android:id="@+id/etCalorie"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Kalori (kkal)"
-            android:inputType="number" />
-
-
-        <Button
-            android:id="@+id/btnReminder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:elevation="0dp"
-            android:text="Aktifkan Pengingat Makan"/>
-
-        <Button
-            android:id="@+id/btnSaveMeal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Simpan"
-            android:backgroundTint="@color/purple_500"
-            android:textColor="@android:color/white"
-            android:elevation="8dp"
-            android:padding="12dp"
-            android:textStyle="bold"/>
-    </LinearLayout>
-
-    <!-- Ringkasan Harian -->
-    <LinearLayout
-        android:id="@+id/summaryBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/bg_login_box"
-        android:elevation="6dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ringkasan Hari Ini"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp"/>
-
-        <TextView
-            android:id="@+id/tvTotalCalorie"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Total Kalori: 0 kkal"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"/>
-
-        <TextView
-            android:id="@+id/tvMealCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Jumlah Makan: 0 kali"
-            android:textSize="14sp"/>
-    </LinearLayout>
-
-
-    <!-- RecyclerView -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvMeals"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:clipToPadding="false"
-        android:paddingTop="8dp"/>
-</LinearLayout>
+        android:paddingTop="16dp"
+        android:paddingBottom="80dp"
+        app:layout_constraintTop_toBottomOf="@+id/cardSummary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_meal"/> <com.google.android.material.floatingactionbutton.FloatingActionButton
+    android:id="@+id/fabAddMeal"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="24dp"
+    android:src="@drawable/ic_add"
+    app:backgroundTint="@color/fab_orange"
+    app:tint="@color/white"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    tools:ignore="ContentDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

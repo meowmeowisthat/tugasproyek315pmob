@@ -1,5 +1,6 @@
 package com.proyek.tugasproyek
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -54,6 +55,10 @@ class RegisterActivity : AppCompatActivity() {
                         ).show()
                     }
                 }
+        }
+
+        binding.tvLogin.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 }

@@ -1,29 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.proyek.tugasproyek">
-    <!-- Permissions -->
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" /> <!-- Storage / media: untuk Android 13+ gunakan READ_MEDIA_IMAGES -->
-    <uses-permission
-        android:name="android.permission.READ_MEDIA_IMAGES"
-        android:required="false" /> <!-- Storage -->
-    <uses-permission
-        android:name="android.permission.READ_MEDIA_IMAGES"
-        android:required="false" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:required="false" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:required="false" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:required="false" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:required="false" /> <!-- Optional camera feature -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
@@ -35,34 +22,38 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tugasproyek">
-        <!-- Main Activity -->
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Login Activity -->
+        </activity>
+
         <activity
             android:name=".LoginActivity"
-            android:exported="false" /> <!-- Register Activity -->
+            android:exported="false" />
         <activity
             android:name=".RegisterActivity"
-            android:exported="false" /> <!-- Meal Activity -->
+            android:exported="false" />
+
         <activity
             android:name=".MealActivity"
-            android:exported="false" /> <!-- Profile Activity -->
+            android:exported="false" />
         <activity
             android:name=".ProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".StatisticsActivity"
             android:exported="false" />
 
         <receiver
             android:name=".MealReminderReceiver"
             android:exported="false" />
 
-        <!-- FileProvider untuk kamera/galeri -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -72,6 +63,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
     </application>
 
 </manifest>

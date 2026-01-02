@@ -1,85 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@drawable/bg_login_box"
-    android:layout_margin="8dp">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp">
 
-    <!-- Baris Tanggal dan Waktu -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:padding="16dp">
+
+        <FrameLayout
+            android:id="@+id/iconContainer"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_button_rounded"
+            android:backgroundTint="#E0F2F1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/ivMealIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_menu"
+                app:tint="#4CAF50"
+                tools:ignore="ContentDescription" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tvMealName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Nasi Goreng Solaria"
+            android:textColor="#2E7D32"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/ivNotification"
+            app:layout_constraintStart_toEndOf="@+id/iconContainer"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvMealType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Makan Malam"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@+id/tvMealName"
+            app:layout_constraintTop_toBottomOf="@+id/tvMealName" />
+
+        <ImageView
+            android:id="@+id/ivNotification"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_launcher_foreground"
+            app:tint="#FFA726"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription"
+            tools:src="@android:drawable/ic_popup_reminder"/>
+
+        <LinearLayout
+            android:id="@+id/layoutInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="@+id/tvMealName"
+            app:layout_constraintTop_toBottomOf="@+id/tvMealType">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/time"
+                app:tint="@android:color/darker_gray"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="19:30"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="4dp"
+                android:src="@drawable/ic_scale"
+                app:tint="#FFA726"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/tvCalories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1550 kcal"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="12sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvDate"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"/>
-
-        <TextView
-            android:id="@+id/tvTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="14sp"/>
-    </LinearLayout>
+            android:layout_marginTop="8dp"
+            android:text="Senin, Desember 30, 2024"
+            android:textColor="#9E9E9E"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@+id/tvMealName"
+            app:layout_constraintTop_toBottomOf="@+id/layoutInfo" />
 
-    <!-- Jenis Makanan -->
-    <TextView
-        android:id="@+id/tvType"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:layout_marginTop="4dp"/>
-
-    <!-- Nama Makanan -->
-    <TextView
-        android:id="@+id/tvFood"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        android:layout_marginTop="2dp"/>
-
-    <!-- Porsi -->
-    <TextView
-        android:id="@+id/tvPortion"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="14sp"
-        android:layout_marginTop="2dp"/>
-
-    <!-- Tombol Edit & Delete -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
-
-        <ImageButton
-            android:id="@+id/btnEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/edit"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/edit"/>
-
-        <ImageButton
-            android:id="@+id/btnDelete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/delete_svg"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/delete"
-            android:layout_marginStart="16dp"/>
-    </LinearLayout>
-</LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

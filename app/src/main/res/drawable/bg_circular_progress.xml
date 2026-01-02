@@ -1,0 +1,16 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="ring" android:thicknessRatio="8" android:useLevel="false">
+            <solid android:color="#EEEEEE" />
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <rotate
+            android:fromDegrees="270"
+            android:toDegrees="270">
+            <shape android:shape="ring" android:thicknessRatio="8" android:useLevel="true">
+                <solid android:color="@color/app_green" />
+            </shape>
+        </rotate>
+    </item>
+</layer-list>

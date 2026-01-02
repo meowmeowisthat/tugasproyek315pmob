@@ -9,6 +9,9 @@
         android:id="@+id/nav_meal"
         android:title="@string/nav_meal"/>
     <item
+        android:id="@+id/nav_statistics"
+        android:title="statistics"/>
+    <item
         android:id="@+id/nav_logout"
         android:title="@string/nav_logout"/>
 </menu>

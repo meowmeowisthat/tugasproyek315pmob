@@ -1,26 +1,27 @@
 package com.proyek.tugasproyek
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.DatePickerDialog
 import android.app.PendingIntent
 import android.app.TimePickerDialog
-import android.content.Intent
-import android.os.Bundle
-import android.util.Log
-import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
+import android.view.View
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import android.view.View
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.proyek.tugasproyek.databinding.ActivityMealBinding
@@ -28,15 +29,17 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MealActivity : AppCompatActivity() {
-    private val IS_TEST_MODE = true
+
     private lateinit var binding: ActivityMealBinding
     private lateinit var db: FirebaseDatabase
     private lateinit var auth: FirebaseAuth
+    private lateinit var adapter: MealAdapter
+
     private val calendar = Calendar.getInstance()
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val displayDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val dbDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-    private lateinit var adapter: MealAdapter
     private var editingMealKey: Pair<String, String>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,312 +47,259 @@ class MealActivity : AppCompatActivity() {
         binding = ActivityMealBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.btnReminder.setOnClickListener {
-
-            if (IS_TEST_MODE) {
-                val cal = Calendar.getInstance()
-                setMealReminder(
-                    cal.get(Calendar.HOUR_OF_DAY),
-                    cal.get(Calendar.MINUTE) + 1,
-                    999
-                )
-                Toast.makeText(this, "Test reminder 1 menit", Toast.LENGTH_SHORT).show()
-            } else {
-                setMealReminder(7, 0, 101)
-                setMealReminder(12, 0, 102)
-                setMealReminder(18, 0, 103)
-                Toast.makeText(this, "Pengingat makan aktif", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        requestNotificationPermission()
-
         db = FirebaseDatabase.getInstance()
         auth = FirebaseAuth.getInstance()
 
-        // Toolbar back
-        binding.ivBack.setOnClickListener { finish() }
-
-        adapter = MealAdapter(::editMeal, ::deleteMeal)
-        binding.rvMeals.layoutManager = LinearLayoutManager(this)
-        binding.rvMeals.adapter = adapter
-
-        binding.etDate.setText(dateFormat.format(calendar.time))
-        binding.etTime.setText(timeFormat.format(calendar.time))
-
-        binding.etDate.setOnClickListener { showDatePicker() }
-        binding.etTime.setOnClickListener { showTimePicker() }
-
-        // Tombol tambah toggle form
-        binding.btnAddMeal.setOnClickListener {
-            binding.mealBox.visibility = View.VISIBLE
-            binding.btnAddMeal.visibility = View.GONE
-        }
-
-        // Tombol simpan
-        binding.btnSaveMeal.setOnClickListener { saveMeal() }
-
-
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissions(
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    200
-                )
-            }
-        }
-
-
-        Log.d("AUTH_TEST", "UID = ${auth.currentUser?.uid}")
-
+        setupPermissions()
+        setupUI()
         loadMeals()
     }
 
-
-    private fun setMealReminder(hour: Int, minute: Int, requestCode: Int) {
-
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        // Android 12+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                startActivity(
-                    Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                )
-                return
-            }
+    private fun setupUI() {
+        adapter = MealAdapter { meal ->
+            showMealDialog(meal)
         }
+        binding.rvMeals.layoutManager = LinearLayoutManager(this)
+        binding.rvMeals.adapter = adapter
 
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            if (before(Calendar.getInstance())) {
-                add(Calendar.DAY_OF_YEAR, 1)
-            }
-        }
+        binding.btnBack.setOnClickListener { finish() }
 
-        val intent = Intent(this, MealReminderReceiver::class.java)
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            requestCode,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )
-    }
-
-
-
-    private fun requestNotificationPermission() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    1001
-                )
-            }
+        binding.fabAddMeal.setOnClickListener {
+            editingMealKey = null //
+            showMealDialog(null)
         }
     }
 
+    private fun showMealDialog(mealToEdit: Meal?) {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_dialog_meal, null)
+        dialog.setContentView(view)
 
-    private fun saveMeal() {
-        val calorieText = binding.etCalorie.text.toString().trim()
-        val type = binding.etType.text.toString().trim()
-        val name = binding.etName.text.toString().trim()
-        val portionText = binding.etPortion.text.toString().trim()
-        val date = binding.etDate.text.toString().trim()
-        val time = binding.etTime.text.toString().trim()
+        (view.parent as? View)?.setBackgroundColor(Color.TRANSPARENT)
 
-        if (type.isEmpty() || name.isEmpty() || portionText.isEmpty() || date.isEmpty() || time.isEmpty()) {
-            Toast.makeText(this, "Semua field wajib diisi", Toast.LENGTH_SHORT).show()
-            return
+        val btnClose = view.findViewById<ImageView>(R.id.btnClose)
+        val spMealType = view.findViewById<Spinner>(R.id.spMealType)
+        val etName = view.findViewById<EditText>(R.id.etMealName)
+        val etPortion = view.findViewById<EditText>(R.id.etPortion)
+        val etCalorie = view.findViewById<EditText>(R.id.etCalories)
+        val tvDate = view.findViewById<TextView>(R.id.tvDate)
+        val tvTime = view.findViewById<TextView>(R.id.tvTime)
+        val switchReminder = view.findViewById<SwitchCompat>(R.id.switchReminder)
+        val btnCancel = view.findViewById<Button>(R.id.btnCancel)
+        val btnSave = view.findViewById<Button>(R.id.btnSave)
+
+        val mealTypes = arrayOf("Sarapan", "Makan Siang", "Makan Malam", "Cemilan")
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, mealTypes)
+        spMealType.adapter = spinnerAdapter
+
+        val currentCal = Calendar.getInstance()
+        tvDate.text = displayDateFormat.format(currentCal.time)
+        tvTime.text = timeFormat.format(currentCal.time)
+        var currentDbDate = dbDateFormat.format(currentCal.time)
+
+        if (mealToEdit != null) {
+            etName.setText(mealToEdit.food)
+            etPortion.setText(mealToEdit.portion.toString())
+
+            val calPerPortion = if (mealToEdit.portion > 0) mealToEdit.calorie / mealToEdit.portion else 0
+            etCalorie.setText(calPerPortion.toString())
+
+            tvTime.text = mealToEdit.time
+
+            val spinnerPos = spinnerAdapter.getPosition(mealToEdit.type)
+            if (spinnerPos >= 0) spMealType.setSelection(spinnerPos)
+
+            try {
+                val dateObj = dbDateFormat.parse(mealToEdit.date)
+                if (dateObj != null) {
+                    tvDate.text = displayDateFormat.format(dateObj)
+                    currentDbDate = mealToEdit.date
+                    currentCal.time = dateObj
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            editingMealKey = Pair(mealToEdit.date, mealToEdit.type)
         }
 
-        val portion = portionText.toIntOrNull()
-        if (portion == null) {
-            Toast.makeText(this, "Porsi harus berupa angka", Toast.LENGTH_SHORT).show()
-            return
+        tvDate.setOnClickListener {
+            val datePicker = DatePickerDialog(this, { _, year, month, day ->
+                currentCal.set(year, month, day)
+                tvDate.text = displayDateFormat.format(currentCal.time)
+                currentDbDate = dbDateFormat.format(currentCal.time)
+            }, currentCal.get(Calendar.YEAR), currentCal.get(Calendar.MONTH), currentCal.get(Calendar.DAY_OF_MONTH))
+            datePicker.show()
         }
 
-        if (calorieText.isEmpty()) {
-            Toast.makeText(this, "Kalori wajib diisi", Toast.LENGTH_SHORT).show()
-            return
+        tvTime.setOnClickListener {
+            val timeParts = tvTime.text.split(":")
+            val initHour = if (timeParts.size == 2) timeParts[0].toInt() else currentCal.get(Calendar.HOUR_OF_DAY)
+            val initMinute = if (timeParts.size == 2) timeParts[1].toInt() else currentCal.get(Calendar.MINUTE)
+
+            val timePicker = TimePickerDialog(this, { _, hour, minute ->
+                val selectedCal = Calendar.getInstance()
+                selectedCal.set(Calendar.HOUR_OF_DAY, hour)
+                selectedCal.set(Calendar.MINUTE, minute)
+                tvTime.text = timeFormat.format(selectedCal.time)
+            }, initHour, initMinute, true)
+            timePicker.show()
         }
 
-        val caloriePerPortion = calorieText.toIntOrNull()
-        if (caloriePerPortion == null) {
-            Toast.makeText(this, "Kalori harus berupa angka", Toast.LENGTH_SHORT).show()
-            return
+        btnClose.setOnClickListener { dialog.dismiss() }
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnSave.setOnClickListener {
+            val type = spMealType.selectedItem.toString()
+            val name = etName.text.toString().trim()
+            val portionStr = etPortion.text.toString().trim()
+            val calStr = etCalorie.text.toString().trim()
+            val time = tvTime.text.toString().trim()
+            val isReminderEnabled = switchReminder.isChecked
+
+            if (name.isEmpty() || portionStr.isEmpty() || calStr.isEmpty()) {
+                Toast.makeText(this, "Mohon lengkapi semua data", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val portion = portionStr.toInt()
+            val caloriePerPortion = calStr.toInt()
+            val totalCalorie = portion * caloriePerPortion
+
+            saveMealToFirebase(type, name, portion, totalCalorie, currentDbDate, time, isReminderEnabled)
+            dialog.dismiss()
         }
 
-        val totalCalorie = portion * caloriePerPortion
+        dialog.show()
+    }
 
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
-            Toast.makeText(this, "User belum login", Toast.LENGTH_SHORT).show()
-            return
+    private fun saveMealToFirebase(type: String, name: String, portion: Int, calorie: Int, dateDbFormat: String, time: String, setReminder: Boolean) {
+        val uid = auth.currentUser?.uid ?: return
+        val userRef = db.reference.child("users").child(uid).child("meals")
+
+        editingMealKey?.let { (oldDate, oldType) ->
+            if (oldDate != dateDbFormat || oldType != type) {
+                userRef.child(oldDate).child(oldType).removeValue()
+            }
         }
 
         val mealData = mapOf(
             "food" to name,
             "portion" to portion,
-            "time" to time,
-            "calorie" to totalCalorie
+            "calorie" to calorie,
+            "time" to time
         )
 
-        val userRef = db.reference.child("users").child(uid).child("meals")
-
-        // Kalau edit data lama
-        editingMealKey?.let { key ->
-            val (oldDate, oldType) = key
-            if (oldDate != date || oldType != type) {
-                userRef.child(oldDate).child(oldType).removeValue()
-            }
-            editingMealKey = null
-        }
-
-        userRef.child(date).child(type)
-            .setValue(mealData)
+        userRef.child(dateDbFormat).child(type).setValue(mealData)
             .addOnSuccessListener {
-                Toast.makeText(this, "Data berhasil disimpan", Toast.LENGTH_SHORT).show()
-                clearForm()
-                binding.mealBox.visibility = View.GONE
-                binding.btnAddMeal.visibility = View.VISIBLE
+                Toast.makeText(this, "Berhasil disimpan", Toast.LENGTH_SHORT).show()
                 loadMeals()
+
+                if (setReminder) {
+                    setMealReminder(time, name)
+                }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menyimpan data", Toast.LENGTH_SHORT).show()
-                Log.e("MealActivity", "Error saat simpan", e)
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun loadMeals() {
         val uid = auth.currentUser?.uid ?: return
+        val todayDate = dbDateFormat.format(Date())
+
         db.reference.child("users").child(uid).child("meals")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val meals = mutableListOf<Meal>()
-                    var totalCalorieToday = 0
-                    var mealCountToday = 0
-
-                    val today = dateFormat.format(Date())
+                    val mealList = mutableListOf<Meal>()
+                    var totalCalories = 0
+                    var totalMealsToday = 0
+                    var remindersCount = 0
 
                     for (dateSnap in snapshot.children) {
-                        val date = dateSnap.key ?: continue
+                        val dateKey = dateSnap.key ?: continue
+
                         for (typeSnap in dateSnap.children) {
-                            val type = typeSnap.key ?: continue
+                            val typeKey = typeSnap.key ?: continue
                             val food = typeSnap.child("food").getValue(String::class.java) ?: ""
-                            val portion = typeSnap.child("portion").getValue(Int::class.java) ?: 0
-                            val time = typeSnap.child("time").getValue(String::class.java) ?: ""
+                            val portion = typeSnap.child("portion").getValue(Int::class.java) ?: 1
                             val calorie = typeSnap.child("calorie").getValue(Int::class.java) ?: 0
+                            val time = typeSnap.child("time").getValue(String::class.java) ?: ""
 
-                            meals.add(Meal(date, "", food, portion, time, calorie))
+                            mealList.add(Meal(food, typeKey, portion, time, calorie, dateKey))
 
-                            if (date == today) {
-                                totalCalorieToday += calorie
-                                mealCountToday++
+                            if (dateKey == todayDate) {
+                                totalCalories += calorie
+                                totalMealsToday++
+                                remindersCount++
                             }
                         }
                     }
 
-                    meals.sortWith(compareBy({ it.date }, { it.time }))
-                    adapter.submitList(meals)
+                    mealList.sortWith(compareBy({ it.date }, { it.time }))
+                    adapter.submitList(mealList)
 
-                    binding.tvTotalCalorie.text = "Total Kalori: $totalCalorieToday kkal"
-                    binding.tvMealCount.text = "Jumlah Makan: $mealCountToday kali"
+                    binding.tvTotalMeals.text = totalMealsToday.toString()
+                    binding.tvTotalKcal.text = totalCalories.toString()
+                    binding.tvReminders.text = remindersCount.toString()
                 }
 
-
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("MealActivity", "Load Error", error.toException())
+                }
             })
     }
 
-    private fun editMeal(meal: Meal) {
-        binding.mealBox.visibility = View.VISIBLE
-        binding.btnAddMeal.visibility = View.GONE
-        binding.etType.setText(meal.type)
-        binding.etName.setText(meal.food)
-        binding.etPortion.setText(meal.portion.toString())
-        binding.etDate.setText(meal.date)
-        binding.etTime.setText(meal.time)
+    private fun setMealReminder(timeString: String, foodName: String) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-        binding.etCalorie.setText((meal.calorie / meal.portion).toString())
-
-        editingMealKey = Pair(meal.date, meal.type)
-    }
-
-    private fun deleteMeal(meal: Meal) {
-        val uid = auth.currentUser?.uid ?: return
-        db.reference.child("users").child(uid).child("meals")
-            .child(meal.date).child(meal.type)
-            .removeValue()
-            .addOnSuccessListener {
-                loadMeals()
-                Toast.makeText(this, "Data dihapus", Toast.LENGTH_SHORT).show()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                startActivity(intent)
+                return
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Gagal menghapus data", Toast.LENGTH_SHORT).show()
+        }
+
+        try {
+            val parts = timeString.split(":")
+            val hour = parts[0].toInt()
+            val minute = parts[1].toInt()
+
+            val requestCode = hour * 100 + minute
+
+            val intent = Intent(this, MealReminderReceiver::class.java).apply {
+                putExtra("foodName", foodName)
             }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                this, requestCode, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val cal = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.DAY_OF_YEAR, 1)
+                }
+            }
+
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)
+            Toast.makeText(this, "Pengingat diset jam $timeString", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            Log.e("Reminder", "Error setting reminder", e)
+            Toast.makeText(this, "Gagal set alarm", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun showDatePicker() {
-        val today = Calendar.getInstance()
-        val dpd = DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                val selected = Calendar.getInstance()
-                selected.set(year, month, dayOfMonth)
-                binding.etDate.setText(dateFormat.format(selected.time))
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        dpd.datePicker.minDate = today.timeInMillis
-        dpd.show()
-    }
-
-    private fun showTimePicker() {
-        val tpd = TimePickerDialog(
-            this,
-            { _, hour, minute ->
-                val selected = Calendar.getInstance()
-                selected.set(Calendar.HOUR_OF_DAY, hour)
-                selected.set(Calendar.MINUTE, minute)
-                binding.etTime.setText(timeFormat.format(selected.time))
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        )
-        tpd.show()
-    }
-
-    private fun clearForm() {
-        binding.etType.text?.clear()
-        binding.etName.text?.clear()
-        binding.etPortion.text?.clear()
-        binding.etCalorie.text?.clear()
-        binding.etDate.setText(dateFormat.format(Calendar.getInstance().time))
-        binding.etTime.setText(timeFormat.format(Calendar.getInstance().time))
-        editingMealKey = null
+    private fun setupPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 100)
+            }
+        }
     }
 }
