@@ -41,6 +41,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btnBack" />
 
+
     <androidx.cardview.widget.CardView
         android:id="@+id/cardSummary"
         android:layout_width="match_parent"

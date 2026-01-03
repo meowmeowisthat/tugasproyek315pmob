@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -65,7 +64,7 @@ class MealActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
 
         binding.fabAddMeal.setOnClickListener {
-            editingMealKey = null //
+            editingMealKey = null
             showMealDialog(null)
         }
     }
@@ -92,10 +91,11 @@ class MealActivity : AppCompatActivity() {
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, mealTypes)
         spMealType.adapter = spinnerAdapter
 
-        val currentCal = Calendar.getInstance()
-        tvDate.text = displayDateFormat.format(currentCal.time)
-        tvTime.text = timeFormat.format(currentCal.time)
-        var currentDbDate = dbDateFormat.format(currentCal.time)
+        val selectedDateCal = Calendar.getInstance()
+
+        tvDate.text = displayDateFormat.format(selectedDateCal.time)
+        tvTime.text = timeFormat.format(selectedDateCal.time)
+        var currentDbDate = dbDateFormat.format(selectedDateCal.time)
 
         if (mealToEdit != null) {
             etName.setText(mealToEdit.food)
@@ -114,7 +114,7 @@ class MealActivity : AppCompatActivity() {
                 if (dateObj != null) {
                     tvDate.text = displayDateFormat.format(dateObj)
                     currentDbDate = mealToEdit.date
-                    currentCal.time = dateObj
+                    selectedDateCal.time = dateObj
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -125,24 +125,43 @@ class MealActivity : AppCompatActivity() {
 
         tvDate.setOnClickListener {
             val datePicker = DatePickerDialog(this, { _, year, month, day ->
-                currentCal.set(year, month, day)
-                tvDate.text = displayDateFormat.format(currentCal.time)
-                currentDbDate = dbDateFormat.format(currentCal.time)
-            }, currentCal.get(Calendar.YEAR), currentCal.get(Calendar.MONTH), currentCal.get(Calendar.DAY_OF_MONTH))
+                selectedDateCal.set(year, month, day)
+
+                tvDate.text = displayDateFormat.format(selectedDateCal.time)
+                currentDbDate = dbDateFormat.format(selectedDateCal.time)
+
+                val now = Calendar.getInstance()
+                if (selectedDateCal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR) &&
+                    selectedDateCal.get(Calendar.YEAR) == now.get(Calendar.YEAR)) {
+                    tvTime.text = timeFormat.format(now.time)
+                }
+
+            }, selectedDateCal.get(Calendar.YEAR), selectedDateCal.get(Calendar.MONTH), selectedDateCal.get(Calendar.DAY_OF_MONTH))
+
+            datePicker.datePicker.minDate = System.currentTimeMillis() - 1000
+
             datePicker.show()
         }
 
         tvTime.setOnClickListener {
             val timeParts = tvTime.text.split(":")
-            val initHour = if (timeParts.size == 2) timeParts[0].toInt() else currentCal.get(Calendar.HOUR_OF_DAY)
-            val initMinute = if (timeParts.size == 2) timeParts[1].toInt() else currentCal.get(Calendar.MINUTE)
+            val initHour = if (timeParts.size == 2) timeParts[0].toInt() else Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            val initMinute = if (timeParts.size == 2) timeParts[1].toInt() else Calendar.getInstance().get(Calendar.MINUTE)
 
             val timePicker = TimePickerDialog(this, { _, hour, minute ->
-                val selectedCal = Calendar.getInstance()
-                selectedCal.set(Calendar.HOUR_OF_DAY, hour)
-                selectedCal.set(Calendar.MINUTE, minute)
-                tvTime.text = timeFormat.format(selectedCal.time)
+                val checkCal = selectedDateCal.clone() as Calendar
+                checkCal.set(Calendar.HOUR_OF_DAY, hour)
+                checkCal.set(Calendar.MINUTE, minute)
+
+                val now = Calendar.getInstance()
+
+                if (checkCal.before(now)) {
+                    Toast.makeText(this, "Waktu sudah berlalu, silakan pilih jam ke depan", Toast.LENGTH_LONG).show()
+                } else {
+                    tvTime.text = String.format("%02d:%02d", hour, minute)
+                }
             }, initHour, initMinute, true)
+
             timePicker.show()
         }
 
@@ -159,6 +178,16 @@ class MealActivity : AppCompatActivity() {
 
             if (name.isEmpty() || portionStr.isEmpty() || calStr.isEmpty()) {
                 Toast.makeText(this, "Mohon lengkapi semua data", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val checkTimeParts = time.split(":")
+            val checkCal = selectedDateCal.clone() as Calendar
+            checkCal.set(Calendar.HOUR_OF_DAY, checkTimeParts[0].toInt())
+            checkCal.set(Calendar.MINUTE, checkTimeParts[1].toInt())
+
+            if (checkCal.timeInMillis < (System.currentTimeMillis() - 60000)) {
+                Toast.makeText(this, "Waktu tidak valid (masa lalu). Mohon perbarui jam.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -236,7 +265,8 @@ class MealActivity : AppCompatActivity() {
                         }
                     }
 
-                    mealList.sortWith(compareBy({ it.date }, { it.time }))
+                    mealList.sortWith(compareByDescending<Meal> { it.date }.thenByDescending { it.time })
+
                     adapter.submitList(mealList)
 
                     binding.tvTotalMeals.text = totalMealsToday.toString()
@@ -249,7 +279,6 @@ class MealActivity : AppCompatActivity() {
                 }
             })
     }
-
     private fun setMealReminder(timeString: String, foodName: String) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -281,9 +310,6 @@ class MealActivity : AppCompatActivity() {
                 set(Calendar.HOUR_OF_DAY, hour)
                 set(Calendar.MINUTE, minute)
                 set(Calendar.SECOND, 0)
-                if (before(Calendar.getInstance())) {
-                    add(Calendar.DAY_OF_YEAR, 1)
-                }
             }
 
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.timeInMillis, pendingIntent)

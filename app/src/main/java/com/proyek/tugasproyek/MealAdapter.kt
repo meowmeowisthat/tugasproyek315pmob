@@ -33,7 +33,7 @@ class MealAdapter(
                 tvTime.text = meal.time
                 tvDate.text = meal.date
 
-                tvCalories.text = "0 kal"
+                tvCalories.text = "${meal.calorie} kal"
 
                 val context = root.context
                 val (bgColor, iconColor, iconRes) = when (meal.type) {

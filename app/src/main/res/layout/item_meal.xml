@@ -65,7 +65,7 @@
             android:id="@+id/ivNotification"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_launcher_foreground"
+            android:src="@drawable/ic_notification"
             app:tint="#FFA726"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
